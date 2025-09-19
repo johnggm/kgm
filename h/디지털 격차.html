@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- <link rel="stylesheet" href="class.css"> -->
+     <style>
+        body {
+    background-image: url('background.jpg'); /* 이미지 파일 경로 */
+    background-size: cover;                 /* 화면에 꽉 차게 */
+    background-position: center;            /* 가운데 정렬 */
+    background-repeat: no-repeat;           /* 반복 금지 */
+}
+        h2{
+            text-align: center;
+        }
+.kge0 {
+    display: flex;
+    width: 550px;
+    margin: 5px auto;        /* 위아래 간격 줄임 */
+    height: auto;            /* 내용 크기에 맞게 */
+}
+
+        .kge1 {
+            flex: 1;             /* 왼쪽 영역 비율 */
+            background-color: lightblue;
+            padding: 20px;
+            margin: 10px;
+        }
+
+        .kge2 {
+            flex: 1;             /* 오른쪽 영역 비율 */
+            background-color: lightcoral;
+            padding: 20px;
+            margin: 10px;
+        }
+
+        .kge3 {
+            display: flex;
+            margin: 0 auto;
+            justify-content: center;
+            align-items: center;
+            background-color: rgb(152, 204, 117);
+            padding: 20px;
+            height: 150px;       /* 화면 전체 높이 */
+            width: 490px;
+            
+        }
+
+        .kge1, .kge2, .kge3 {
+            border-radius: 15px; 
+        }
+        .kga {
+            font-size: 40px;
+        }
+
+            footer {
+      width: 100%;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      margin-top: 30px;
+    }
+     </style>
+
+</head>
+<body>
+    <span class="kga"><center><strong>환영합니다!<br>쉬운 디지털 연습장</strong></center></span>
+<div style="background-color: #333; color: #ffffff;">
+<hr style="border:2px solid #333; margin-top:5px; margin-bottom:5px;">
+<div style="text-align:center; font-size:18px; padding:10px;">
+  <a href="#" style="margin:0 20px; text-decoration:none; color:white;">홈</a> |
+  <a href="#" style="margin:0 20px; text-decoration:none; color:white;">사용법 배우기</a> |
+  <a href="#" style="margin:0 20px; text-decoration:none; color:white;">생활 서비스</a> |
+  <a href="#" style="margin:0 20px; text-decoration:none; color:white;">도움 요청</a>
+</div>
+
+<hr style="border:2px solid #333; margin-top:5px; margin-bottom:5px;">
+</div>
+
+    <div class="kge0">
+        <div class="kge1" onclick="location.href='page1.html'">
+            <h2>스마트폰 기본 사용법</h2>
+        </div>
+
+        <div class="kge2" onclick="location.href='page1.html'">
+            <h2>키워스크 기본 사용법</h2>
+        </div>
+    </div>
+        <div class="kge0">
+        <div class="kge1" onclick="location.href='page1.html'">
+            <h2>최신 뉴스</h2>
+        </div>
+
+        <div class="kge2" onclick="location.href='page1.html'">
+            <h2>안정하게 사용하기</h2>
+        </div>
+    </div>
+    <div class="kge3" onclick="location.href='page1.html'">
+        <h2>도움 받기</h2>
+    </div>
+
+ <footer>
+    <p>© 2025 쉬운 디지털 연습장 | 이메일: gu3349856@gmail.com</p>
+    <p>제작: 20601권기민</p>
+  </footer>
+</body>
+</html>

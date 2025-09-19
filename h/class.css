@@ -1,0 +1,32 @@
+        .container {
+  display: flex;
+  flex-direction: column;   /* 세로로 쌓기 */
+  align-items: center;      /* 가로 가운데 정렬 */
+}
+        .kge0 {
+            display: flex;       /* 가로 배치 */
+            height: 250px;       /* 화면 전체 높이 */
+            width: 500px;
+            margin-left: 100px;
+        }
+
+        .kge1 {
+            flex: 1;             /* 왼쪽 영역 비율 */
+            background-color: lightblue;
+            padding: 20px;
+            margin: 10px;
+        }
+
+        .kge2 {
+            flex: 1;             /* 오른쪽 영역 비율 */
+            background-color: lightcoral;
+            padding: 20px;
+            margin: 10px;
+        }
+
+        .kge3 {
+            flex: 1;             /* 오른쪽 영역 비율 */
+            background-color: rgb(59, 59, 59);
+            padding: 20px;
+            margin: 10px;
+        }
