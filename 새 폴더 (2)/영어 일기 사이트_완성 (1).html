@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영어 읽기 사이트</title>
+    <style>
+        /* 기본 박스 모델 설정 */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f9fc;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* 전체 화면을 감싸는 래퍼 */
+        .wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* 헤더 영역 */
+        .header {
+            background-color: #4b9cd3;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* 콘텐츠 영역을 좌우 나누는 플렉스 레이아웃 */
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .left-panel,
+        .right-panel {
+            flex: 1;
+            padding: 20px;
+            min-width: 280px;
+        }
+
+        .left-panel {
+            border-right: 1px solid #eee;
+        }
+
+        @media (max-width: 600px) {
+            /* 좁은 화면에서는 세로로 정렬 */
+            .content {
+                flex-direction: column;
+            }
+            .left-panel {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+        }
+
+        /* 라벨 스타일 */
+        .label-title {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+
+        /* 텍스트 입력과 셀렉트 박스 공통 스타일 */
+        #text-input,
+        #voice-select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: #fafafa;
+        }
+
+        /* 버튼 정렬과 스타일 */
+        .button-row {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            cursor: pointer;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background-color: #4b9cd3;
+            color: #fff;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+        }
+        button:hover {
+            background-color: #3a85b6;
+        }
+        button:disabled {
+            background-color: #a0c6de;
+            cursor: not-allowed;
+        }
+
+        /* 읽기 영역: 텍스트와 현재 읽고 있는 부분 표시 */
+        #reading-display {
+            margin-top: 20px;
+            font-size: 20px;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+        #reading-display span {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        #reading-display span.current {
+            background-color: #ffe49a;
+        }
+
+        /* 오른쪽 패널 스타일 */
+        .right-panel h2 {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+        #word-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        #word-list li {
+            padding: 6px 4px;
+            border-bottom: 1px solid #eee;
+        }
+        #word-list li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="header">영어 읽기 사이트</div>
+        <div class="content">
+            <!-- 왼쪽 패널: 텍스트 입력과 읽기 기능 -->
+            <div class="left-panel">
+                <label class="label-title" for="text-input">읽기</label>
+                <textarea id="text-input" rows="5" placeholder="영어 단어 또는 문장을 입력하세요."></textarea>
+
+                <label class="label-title" for="voice-select">목소리 선택</label>
+                <select id="voice-select"></select>
+
+                <div class="button-row">
+                    <button id="play-btn">재생</button>
+                    <button id="pause-btn" disabled>일시정지</button>
+                    <button id="stop-btn" disabled>정지</button>
+                </div>
+
+                <div id="reading-display"></div>
+            </div>
+
+            <!-- 오른쪽 패널: 입력된 단어 목록 표시 -->
+            <div class="right-panel">
+                <h2>단어 목록</h2>
+                <ul id="word-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('text-input');
+        const voiceSelect = document.getElementById('voice-select');
+        const playBtn = document.getElementById('play-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const readingDisplay = document.getElementById('reading-display');
+        const wordListEl = document.getElementById('word-list');
+
+        let voices = [];
+        let words = [];
+        let currentIndex = 0;
+        let isReading = false;
+        let utterance;
+        let userPaused = false;
+
+        // 음성 목록을 가져와서 셀렉트 박스를 채우는 함수
+        function populateVoices() {
+            // 영어만 필터링
+            voices = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+            voiceSelect.innerHTML = '';
+            if (voices.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = '음성 없음';
+                voiceSelect.appendChild(option);
+                return;
+            }
+            voices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        populateVoices();
+        // 새 음성 추가되면 다시 채우기
+        speechSynthesis.onvoiceschanged = populateVoices;
+
+        // 텍스트 입력 시 단어 목록과 읽기 영역 갱신
+        textInput.addEventListener('input', () => {
+            updateWordList();
+            displayReadingText();
+            resetControls();
+        });
+
+        // 플레이 버튼: 읽기 시작 또는 재개
+        playBtn.addEventListener('click', () => {
+            if (!isReading) {
+                // 읽기가 시작되지 않았으면 처음부터 시작
+                displayReadingText();
+                currentIndex = 0;
+                startReadingFrom(currentIndex);
+            } else if (userPaused) {
+                // 일시정지 상태라면 재개
+                speechSynthesis.resume();
+                userPaused = false;
+                playBtn.textContent = '재생';
+                pauseBtn.disabled = false;
+            }
+        });
+
+        // 일시정지 버튼
+        pauseBtn.addEventListener('click', () => {
+            if (isReading) {
+                speechSynthesis.pause();
+                userPaused = true;
+                playBtn.textContent = '재개';
+                pauseBtn.disabled = true;
+            }
+        });
+
+        // 정지 버튼
+        stopBtn.addEventListener('click', () => {
+            stopReading();
+        });
+
+        // 단어 목록 업데이트
+        function updateWordList() {
+            const text = textInput.value;
+            const wordArray = text.split(/\s+/).filter(w => w.trim() !== '');
+            const uniqueWords = Array.from(new Set(wordArray.map(w => w.toLowerCase())));
+            wordListEl.innerHTML = '';
+            uniqueWords.forEach(word => {
+                const li = document.createElement('li');
+                li.textContent = word;
+                wordListEl.appendChild(li);
+            });
+        }
+
+        // 읽기 영역에 텍스트를 렌더링하고 각 단어에 클릭 이벤트를 등록
+        function displayReadingText() {
+            const text = textInput.value.trim();
+            readingDisplay.innerHTML = '';
+            words = text.split(/\s+/).filter(w => w.trim() !== '');
+            words.forEach((word, index) => {
+                const span = document.createElement('span');
+                // 마지막 단어가 아니면 공백도 함께 포함
+                span.textContent = word + (index < words.length - 1 ? ' ' : '');
+                span.dataset.index = index;
+                span.addEventListener('click', () => {
+                    // 현재 읽기를 멈추고 선택한 단어부터 다시 읽기
+                    stopReading();
+                    currentIndex = parseInt(span.dataset.index, 10);
+                    startReadingFrom(currentIndex);
+                });
+                readingDisplay.appendChild(span);
+            });
+        }
+
+        // 버튼 상태와 변수 초기화
+        function resetControls() {
+            isReading = false;
+            currentIndex = 0;
+            userPaused = false;
+            playBtn.disabled = false;
+            pauseBtn.disabled = true;
+            stopBtn.disabled = true;
+            playBtn.textContent = '재생';
+            highlightWord(-1);
+        }
+
+        // 특정 단어를 강조 표시
+        function highlightWord(index) {
+            const spans = readingDisplay.querySelectorAll('span');
+            spans.forEach(span => span.classList.remove('current'));
+            if (index >= 0 && index < spans.length) {
+                spans[index].classList.add('current');
+            }
+        }
+
+        // 특정 인덱스부터 읽기 시작
+        function startReadingFrom(startIndex) {
+            if (!words.length) return;
+            // 읽기가 시작되었음을 표시하고 버튼 상태 설정
+            isReading = true;
+            playBtn.disabled = true;
+            pauseBtn.disabled = false;
+            stopBtn.disabled = false;
+            userPaused = false;
+            currentIndex = startIndex;
+            // 시작 단어를 먼저 강조 표시
+            highlightWord(startIndex);
+            // startIndex부터 남은 단어를 하나의 문자열로 결합
+            const textToRead = words.slice(startIndex).join(' ');
+            // 각 단어의 시작 위치를 기록하여 경계 이벤트에서 어느 단어인지 찾기
+            const positions = [];
+            let offset = 0;
+            for (let i = startIndex; i < words.length; i++) {
+                positions.push(offset);
+                // 단어 길이 + 공백 하나
+                offset += words[i].length + 1;
+            }
+            // SpeechSynthesisUtterance 생성
+            utterance = new SpeechSynthesisUtterance(textToRead);
+            const selectedVoiceIndex = parseInt(voiceSelect.value, 10);
+            if (!isNaN(selectedVoiceIndex) && voices[selectedVoiceIndex]) {
+                utterance.voice = voices[selectedVoiceIndex];
+            }
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            // 단어 경계 이벤트에서 현재 단어를 찾아 강조
+            utterance.onboundary = (event) => {
+                if (event.name === 'word') {
+                    const charIndex = event.charIndex;
+                    // positions 배열을 사용해 현재 발음 중인 단어의 로컬 인덱스를 찾음
+                    let localIndex = 0;
+                    for (let i = 0; i < positions.length; i++) {
+                        if (positions[i] <= charIndex) {
+                            localIndex = i;
+                        }
+                    }
+                    const globalIndex = startIndex + localIndex;
+                    highlightWord(globalIndex);
+                    currentIndex = globalIndex;
+                }
+            };
+            // 텍스트 전체를 다 읽었을 때 정지 처리
+            utterance.onend = () => {
+                stopReading();
+            };
+            speechSynthesis.speak(utterance);
+        }
+
+        // 읽기 중지 및 상태 초기화
+        function stopReading() {
+            speechSynthesis.cancel();
+            isReading = false;
+            resetControls();
+        }
+    </script>
+</body>
+</html>
